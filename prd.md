@@ -161,3 +161,5 @@ Here is a Product Requirements Document (PRD) for the Vibe application, based on
 *   **Chapter 20: Deployment**: Vercel Deployment, Ingest Production Connection.
 
 ---
+
+e2b template build --name miniai-swe --cmd compile_page.sh

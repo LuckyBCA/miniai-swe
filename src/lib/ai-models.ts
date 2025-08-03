@@ -3,7 +3,7 @@ export type BrandedModel = 'Vibe-S' | 'Vibe-M' | 'Vibe-L';
 interface ModelDetails {
   id: string;
   name: BrandedModel;
-  provider: 'OpenRouter' | 'TogetherAI';
+  provider: 'OpenRouter' | 'Together';
   description: string;
 }
 
@@ -11,7 +11,7 @@ export const modelMappings: Record<BrandedModel, ModelDetails> = {
   'Vibe-S': {
     id: 'deepseek-ai/DeepSeek-R1-Distill-Llama-70B-free',
     name: 'Vibe-S',
-    provider: 'TogetherAI',
+    provider: 'Together',
     description: 'Fast and capable, great for general tasks. (DeepSeek R1 Distill Llama 70B)',
   },
   'Vibe-M': {

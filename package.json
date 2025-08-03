@@ -9,12 +9,17 @@
     "lint": "next lint"
   },
   "prisma": {
-    "seed": "tsx prisma/seed.ts"
+    "schema": "schema.prisma"
   },
   "dependencies": {
+    "@azure/openai": "^2.0.0",
     "@clerk/nextjs": "^6.28.1",
-    "@hookform/resolvers": "^5.2.1",
+    "@hookform/resolvers": "^3.9.0",
+    "@inngest/agent-kit": "^0.1.0",
+    "@inngest/next": "^3.29.0",
     "@prisma/client": "^6.13.0",
+    "@google/generative-ai": "^1.0.0",
+    "@xai-org/groq-sdk": "^0.1.0",
     "@radix-ui/react-accordion": "^1.2.11",
     "@radix-ui/react-alert-dialog": "^1.1.14",
     "@radix-ui/react-aspect-ratio": "^1.1.7",
@@ -68,14 +73,15 @@
     "server-only": "^0.0.1",
     "sonner": "^2.0.6",
     "superjson": "^2.2.2",
+    "svix": "^1.70.0",
     "tailwind-merge": "^3.3.1",
     "vaul": "^1.1.2",
-    "zod": "^4.0.14"
+    "zod": "^3.23.8"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
     "@tailwindcss/postcss": "^4",
-    "@types/node": "^20",
+    "@types/node": "^20.14.12",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
