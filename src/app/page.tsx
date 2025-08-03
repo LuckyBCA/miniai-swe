@@ -14,12 +14,12 @@ export default function Home() {
   const [prompt, setPrompt] = useState('');
   const [selectedModel, setSelectedModel] = useState<BrandedModel>(availableModels[0].name);
 
-  const { mutate, isLoading } = trpc.inngest.send.useMutation({
+  const { mutate, isPending } = trpc.inngest.send.useMutation({
     onSuccess: () => {
       toast.success('Generation started!');
       setPrompt('');
     },
-    onError: (error: TRPCClientError<AppRouter>) => {
+    onError: (error) => {
       toast.error('Failed to start generation.');
       console.error(error);
     }
@@ -63,10 +63,10 @@ export default function Home() {
               </select>
               <button
                 type="submit"
-                disabled={isLoading || !prompt.trim()}
+                disabled={isPending || !prompt.trim()}
                 className="px-6 py-2 bg-blue-600 rounded-md hover:bg-blue-700 disabled:bg-gray-500 transition-colors flex-grow"
               >
-                {isLoading ? "Generating..." : "Generate"}
+                {isPending ? "Generating..." : "Generate"}
               </button>
             </div>
           </form>
