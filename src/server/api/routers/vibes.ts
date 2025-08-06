@@ -37,10 +37,10 @@ export const vibesRouter = createTRPCRouter({
 
     const stats = {
       total: vibes.length,
-      completed: vibes.filter(v => v.status === 'COMPLETED').length,
-      pending: vibes.filter(v => v.status === 'PENDING').length,
-      failed: vibes.filter(v => v.status === 'FAILED').length,
-      thisWeek: vibes.filter(v => {
+      completed: vibes.filter((v: any) => v.status === 'COMPLETED').length,
+      pending: vibes.filter((v: any) => v.status === 'PENDING').length,
+      failed: vibes.filter((v: any) => v.status === 'FAILED').length,
+      thisWeek: vibes.filter((v: any) => {
         const weekAgo = new Date();
         weekAgo.setDate(weekAgo.getDate() - 7);
         return v.createdAt >= weekAgo;

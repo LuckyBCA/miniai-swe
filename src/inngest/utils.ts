@@ -25,12 +25,11 @@ const activeSandboxes: Record<string, SandboxWithMetadata> = {};
  */
 export async function createSandbox(timeout?: number): Promise<string> {
   try {
-    const sandbox = await Sandbox.create({
-      template: SANDBOX_TEMPLATE_ID,
-      timeout: timeout || DEFAULT_SANDBOX_TIMEOUT
+    const sandbox = await Sandbox.create(SANDBOX_TEMPLATE_ID, {
+      timeoutMs: timeout || DEFAULT_SANDBOX_TIMEOUT
     });
     
-    return sandbox.id;
+    return (sandbox as any).id;
   } catch (error) {
     console.error("Failed to create sandbox:", error);
     throw new Error(`Failed to create sandbox: ${error instanceof Error ? error.message : "Unknown error"}`);
@@ -117,7 +116,7 @@ export async function cleanupSandbox(sandboxId: string): Promise<void> {
   
   try {
     const sandbox = await getSandbox(sandboxId);
-    await sandbox.close();
+    await sandbox.kill();
     console.log(`Sandbox ${sandboxId} closed successfully`);
   } catch (error) {
     console.error(`Error closing sandbox ${sandboxId}:`, error);
@@ -137,7 +136,7 @@ export function getLastAssistantMessage(result: any): string | undefined {
       if (typeof message.content === 'string') {
         return message.content;
       } else if (Array.isArray(message.content)) {
-        return message.content.map(item => item.text || "").join("\n");
+        return message.content.map((item: any) => item.text || "").join("\n");
       }
     }
   }

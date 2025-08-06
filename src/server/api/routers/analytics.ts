@@ -18,12 +18,12 @@ export const analyticsRouter = createTRPCRouter({
 
     return {
       totalVibes: vibes.length,
-      completedVibes: vibes.filter(v => v.status === 'COMPLETED').length,
-      failedVibes: vibes.filter(v => v.status === 'FAILED').length,
-      pendingVibes: vibes.filter(v => v.status === 'PENDING').length,
-      thisMonthVibes: vibes.filter(v => v.createdAt >= thisMonth).length,
-      lastMonthVibes: vibes.filter(v => v.createdAt >= lastMonth && v.createdAt < thisMonth).length,
-      modelUsage: vibes.reduce((acc, v) => {
+      completedVibes: vibes.filter((v: any) => v.status === 'COMPLETED').length,
+      failedVibes: vibes.filter((v: any) => v.status === 'FAILED').length,
+      pendingVibes: vibes.filter((v: any) => v.status === 'PENDING').length,
+      thisMonthVibes: vibes.filter((v: any) => v.createdAt >= thisMonth).length,
+      lastMonthVibes: vibes.filter((v: any) => v.createdAt >= lastMonth && v.createdAt < thisMonth).length,
+      modelUsage: vibes.reduce((acc: any, v: any) => {
         const model = v.model || 'unknown';
         acc[model] = (acc[model] || 0) + 1;
         return acc;
