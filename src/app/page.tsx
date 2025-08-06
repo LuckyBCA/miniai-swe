@@ -13,7 +13,8 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Sparkles, Zap, Brain, Rocket, Code2, Palette } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
+import { Sparkles, Zap, Brain, Rocket, Code2, Palette, Star, AlertTriangle } from "lucide-react";
 
 const availableModels = getAvailableModels();
 
@@ -22,12 +23,15 @@ export default function Home() {
   const [selectedModel, setSelectedModel] = useState<BrandedModel>(availableModels[0]);
   const [selectedModelId, setSelectedModelId] = useState<string>(availableModels[0].id);
 
+  // Fetch credit status
+  const { data: creditStatus, refetch: refetchCredits } = trpc.credits.getStatus.useQuery();
+
   const { mutate, isPending } = trpc.inngest.send.useMutation({
-    onSuccess: () => {
+    onSuccess: (data) => {
       toast.success(
         'Generation started!', 
         {
-          description: 'Check the "View My Vibes" page to see results.',
+          description: `${data.creditsRemaining} credits remaining. Check "View My Vibes" to see results.`,
           duration: 5000,
           action: {
             label: 'View',
@@ -36,9 +40,20 @@ export default function Home() {
         }
       );
       setPrompt('');
+      refetchCredits(); // Refresh credit status after successful generation
     },
     onError: (error) => {
-      toast.error('Failed to start generation.');
+      const errorMessage = error.message;
+      if (errorMessage.includes('credit')) {
+        toast.error(errorMessage, {
+          action: {
+            label: 'Upgrade',
+            onClick: () => window.location.href = '/upgrade'
+          }
+        });
+      } else {
+        toast.error('Failed to start generation.');
+      }
       console.error(error);
     }
   });
@@ -46,6 +61,18 @@ export default function Home() {
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!prompt.trim()) return;
+    
+    // Check if user has enough credits before submitting
+    if (creditStatus && creditStatus.current < 5) {
+      toast.error('Not enough credits for app generation', {
+        action: {
+          label: 'Upgrade',
+          onClick: () => window.location.href = '/upgrade'
+        }
+      });
+      return;
+    }
+    
     mutate({ prompt, model: selectedModelId });
   };
 
@@ -83,6 +110,32 @@ export default function Home() {
           </div>
           
           <div className="flex items-center gap-3">
+            {/* Credit Status */}
+            {creditStatus && (
+              <Card className="bg-white/5 backdrop-blur-lg border-white/10 p-3">
+                <div className="flex items-center gap-3">
+                  <div className="text-center">
+                    <div className="text-sm text-gray-300">Credits</div>
+                    <div className="text-lg font-bold text-white">
+                      {creditStatus.current}/{creditStatus.daily}
+                    </div>
+                  </div>
+                  <Progress 
+                    value={(creditStatus.current / creditStatus.daily) * 100} 
+                    className="w-16 h-2"
+                  />
+                  {!creditStatus.isPremuim && creditStatus.current < 10 && (
+                    <Button size="sm" variant="secondary" asChild className="bg-yellow-500/20 text-yellow-300 border-yellow-500/30">
+                      <a href="/upgrade">
+                        <Star className="w-3 h-3 mr-1" />
+                        Upgrade
+                      </a>
+                    </Button>
+                  )}
+                </div>
+              </Card>
+            )}
+            
             <Button variant="outline" size="sm" asChild className="border-white/20 text-white hover:bg-white/10">
               <a href="/vibes">
                 <Brain className="w-4 h-4 mr-2" />
@@ -125,6 +178,24 @@ export default function Home() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
+                {/* Credit Warning */}
+                {creditStatus && creditStatus.current < 5 && (
+                  <div className="p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
+                    <div className="flex items-center gap-3">
+                      <AlertTriangle className="w-5 h-5 text-yellow-400" />
+                      <div>
+                        <p className="text-yellow-300 font-medium">Low Credits Warning</p>
+                        <p className="text-yellow-200 text-sm">
+                          You have {creditStatus.current} credits remaining. App generation costs 5 credits.
+                          {!creditStatus.isPremuim && (
+                            <span> <a href="/upgrade" className="underline hover:text-yellow-100">Upgrade to Premium</a> for unlimited access!</span>
+                          )}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 <form onSubmit={handleSubmit} className="space-y-6">
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-gray-200">What would you like to build?</label>
@@ -167,8 +238,8 @@ export default function Home() {
 
                   <Button
                     type="submit"
-                    disabled={isPending || !prompt.trim()}
-                    className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white shadow-lg hover:shadow-xl transition-all duration-200"
+                    disabled={isPending || !prompt.trim() || (creditStatus && creditStatus.current < 5)}
+                    className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white shadow-lg hover:shadow-xl transition-all duration-200 disabled:from-gray-600 disabled:to-gray-700"
                     size="lg"
                   >
                     {isPending ? (
@@ -176,10 +247,15 @@ export default function Home() {
                         <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />
                         Generating Magic...
                       </>
+                    ) : (creditStatus && creditStatus.current < 5) ? (
+                      <>
+                        <AlertTriangle className="w-5 h-5 mr-2" />
+                        Insufficient Credits (Need 5)
+                      </>
                     ) : (
                       <>
                         <Sparkles className="w-5 h-5 mr-2" />
-                        Generate Application
+                        Generate Application (5 Credits)
                       </>
                     )}
                   </Button>

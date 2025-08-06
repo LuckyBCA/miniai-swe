@@ -14,8 +14,16 @@ model User {
   name                      String?
   encryptedOpenRouterApiKey String?
   encryptedTogetherAiApiKey String?
+  // Credit system fields
+  credits                   Int              @default(50) // Daily free credits
+  creditsResetAt            DateTime?        // When credits were last reset
+  isPremuim                 Boolean          @default(false) // Premium subscription status
+  stripeCustomerId          String?          // Stripe customer ID for premium users
+  stripeSubscriptionId      String?          // Stripe subscription ID
+  // Relations
   vibes                     Vibe[]
   sandboxPreviews           SandboxPreview[]
+  creditUsage               CreditUsage[]
 }
 
 model Vibe {
@@ -47,6 +55,21 @@ model SandboxPreview {
   error     String?
   
   metadata  Json?
+}
+
+model CreditUsage {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  
+  userId    String
+  action    String   // 'app_generation', 'sandbox_preview', 'code_execution'
+  cost      Int      @default(1) // Credits consumed
+  success   Boolean  @default(true) // Whether the action was successful
+  metadata  Json?    // Additional metadata about the usage
+  
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId, createdAt])
 }
 
 enum GenerationStatus {
