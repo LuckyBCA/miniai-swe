@@ -12,7 +12,8 @@ const availableModels = getAvailableModels();
 
 export default function Home() {
   const [prompt, setPrompt] = useState('');
-  const [selectedModel, setSelectedModel] = useState<BrandedModel>(availableModels[0].name);
+  const [selectedModel, setSelectedModel] = useState<BrandedModel>(availableModels[0]);
+  const [selectedModelId, setSelectedModelId] = useState<string>(availableModels[0].id);
 
   const { mutate, isPending } = trpc.inngest.send.useMutation({
     onSuccess: () => {
@@ -38,7 +39,7 @@ export default function Home() {
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!prompt.trim()) return;
-    mutate({ prompt, model: selectedModel });
+    mutate({ prompt, model: selectedModelId });
   };
 
   return (
@@ -75,12 +76,17 @@ export default function Home() {
             />
             <div className="flex items-center gap-4">
               <select
-                value={selectedModel}
-                onChange={(e) => setSelectedModel(e.target.value as BrandedModel)}
+                value={selectedModelId}
+                onChange={(e) => {
+                  const modelId = e.target.value;
+                  setSelectedModelId(modelId);
+                  const model = availableModels.find(m => m.id === modelId);
+                  if (model) setSelectedModel(model);
+                }}
                 className="p-2 bg-gray-800 border border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 {availableModels.map((model) => (
-                  <option key={model.name} value={model.name}>
+                  <option key={model.id} value={model.id}>
                     {model.name} - {model.description}
                   </option>
                 ))}

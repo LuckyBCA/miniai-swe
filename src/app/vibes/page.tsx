@@ -61,7 +61,7 @@ export default function VibesPage() {
           </div>
         ) : vibes && vibes.length > 0 ? (
           <div className="grid gap-8">
-            {vibes.map((vibe) => (
+            {vibes.map((vibe: Vibe) => (
               <VibeCard key={vibe.id} vibe={vibe} />
             ))}
           </div>
