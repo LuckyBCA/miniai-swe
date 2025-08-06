@@ -96,7 +96,7 @@ export default function Home() {
         <header className="w-full max-w-6xl flex flex-col lg:flex-row justify-between items-center gap-4 mb-12">
           <div className="flex items-center gap-6">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-blue-500 rounded-xl flex items-center justify-center">
+              <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-blue-500 rounded-xl flex items-center justify-center animate-bounce">
                 <Sparkles className="w-6 h-6 text-white" />
               </div>
               <h1 className="text-4xl lg:text-5xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
@@ -112,7 +112,7 @@ export default function Home() {
           <div className="flex items-center gap-3">
             {/* Credit Status */}
             {creditStatus && (
-              <Card className="bg-white/5 backdrop-blur-lg border-white/10 p-3">
+              <Card className="bg-white/5 backdrop-blur-lg border-white/10 p-3 hover:bg-white/10 hover:border-white/20 transition-all duration-300 animate-in slide-in-from-top duration-500">
                 <div className="flex items-center gap-3">
                   <div className="text-center">
                     <div className="text-sm text-gray-300">Credits</div>
@@ -125,7 +125,7 @@ export default function Home() {
                     className="w-16 h-2"
                   />
                   {!creditStatus.isPremuim && creditStatus.current < 10 && (
-                    <Button size="sm" variant="secondary" asChild className="bg-yellow-500/20 text-yellow-300 border-yellow-500/30">
+                    <Button size="sm" variant="secondary" asChild className="bg-yellow-500/20 text-yellow-300 border-yellow-500/30 hover:bg-yellow-500/30 transition-all duration-200 animate-pulse">
                       <a href="/upgrade">
                         <Star className="w-3 h-3 mr-1" />
                         Upgrade
@@ -154,20 +154,27 @@ export default function Home() {
 
         {/* Hero Section */}
         <div className="text-center mb-12 max-w-4xl">
-          <h2 className="text-3xl lg:text-6xl font-bold text-white mb-4">
+          <h2 className="text-3xl lg:text-6xl font-bold text-white mb-4 animate-in slide-in-from-bottom-4 duration-1000">
             Build Your Next
-            <span className="bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent"> Startup</span>
+            <span className="bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent animate-pulse"> Startup</span>
           </h2>
-          <p className="text-xl text-gray-300 mb-8">
+          <p className="text-xl text-gray-300 mb-8 animate-in slide-in-from-bottom-6 duration-1000 delay-200">
             Transform your ideas into working applications with nothing more than a sentence.
           </p>
+          
+          {/* Floating elements */}
+          <div className="absolute inset-0 pointer-events-none">
+            <div className="absolute top-1/4 left-1/4 w-2 h-2 bg-purple-400 rounded-full animate-ping opacity-75"></div>
+            <div className="absolute top-1/3 right-1/4 w-1 h-1 bg-blue-400 rounded-full animate-ping opacity-50 delay-1000"></div>
+            <div className="absolute bottom-1/4 left-1/3 w-1.5 h-1.5 bg-indigo-400 rounded-full animate-ping opacity-60 delay-500"></div>
+          </div>
         </div>
 
         {/* Main Content Grid */}
         <div className="w-full max-w-6xl grid lg:grid-cols-3 gap-8">
           {/* Generation Form */}
           <div className="lg:col-span-2">
-            <Card className="bg-white/5 backdrop-blur-lg border-white/10 shadow-2xl">
+            <Card className="bg-white/5 backdrop-blur-lg border-white/10 shadow-2xl hover:shadow-purple-500/10 transition-all duration-500 hover:border-white/20 animate-in slide-in-from-left duration-700">
               <CardHeader>
                 <CardTitle className="text-white flex items-center gap-2">
                   <Rocket className="w-6 h-6 text-purple-400" />
@@ -239,9 +246,12 @@ export default function Home() {
                   <Button
                     type="submit"
                     disabled={isPending || !prompt.trim() || (creditStatus && creditStatus.current < 5)}
-                    className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white shadow-lg hover:shadow-xl transition-all duration-200 disabled:from-gray-600 disabled:to-gray-700"
+                    className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white shadow-lg hover:shadow-xl transition-all duration-200 disabled:from-gray-600 disabled:to-gray-700 relative overflow-hidden group"
                     size="lg"
                   >
+                    {/* Animated background on hover */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-purple-400 to-blue-400 opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
+                    
                     {isPending ? (
                       <>
                         <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />
@@ -254,7 +264,7 @@ export default function Home() {
                       </>
                     ) : (
                       <>
-                        <Sparkles className="w-5 h-5 mr-2" />
+                        <Sparkles className="w-5 h-5 mr-2 group-hover:animate-pulse" />
                         Generate Application (5 Credits)
                       </>
                     )}
@@ -269,10 +279,14 @@ export default function Home() {
                       <button
                         key={idx}
                         onClick={() => setPrompt(example.text)}
-                        className="flex items-center gap-3 w-full p-3 text-left bg-white/5 hover:bg-white/10 rounded-lg transition-colors text-gray-300 hover:text-white text-sm"
+                        className="flex items-center gap-3 w-full p-3 text-left bg-white/5 hover:bg-white/10 rounded-lg transition-all duration-200 text-gray-300 hover:text-white text-sm group hover:scale-[1.02] hover:-translate-y-0.5"
                       >
-                        <div className="text-purple-400">{example.icon}</div>
-                        {example.text}
+                        <div className="text-purple-400 group-hover:text-purple-300 transition-colors duration-200 group-hover:scale-110">
+                          {example.icon}
+                        </div>
+                        <span className="group-hover:translate-x-1 transition-transform duration-200">
+                          {example.text}
+                        </span>
                       </button>
                     ))}
                   </div>
@@ -282,37 +296,37 @@ export default function Home() {
           </div>
 
           {/* Message Interface */}
-          <div className="lg:col-span-1">
+          <div className="lg:col-span-1 animate-in slide-in-from-right duration-700 delay-300">
             <MessageInterface />
           </div>
         </div>
 
         {/* Features Grid */}
         <div className="w-full max-w-6xl mt-16 grid md:grid-cols-3 gap-6">
-          <Card className="bg-white/5 backdrop-blur-lg border-white/10">
+          <Card className="bg-white/5 backdrop-blur-lg border-white/10 hover:bg-white/10 hover:border-white/20 transition-all duration-300 transform hover:scale-105 hover:-translate-y-1">
             <CardContent className="p-6 text-center">
-              <div className="w-12 h-12 bg-purple-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Brain className="w-6 h-6 text-purple-400" />
+              <div className="w-12 h-12 bg-purple-500/20 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-purple-500/30 transition-colors duration-300">
+                <Brain className="w-6 h-6 text-purple-400 group-hover:text-purple-300 transition-colors duration-300" />
               </div>
               <h3 className="text-lg font-semibold text-white mb-2">AI-Powered</h3>
               <p className="text-gray-300 text-sm">Advanced AI models generate production-ready code from natural language.</p>
             </CardContent>
           </Card>
 
-          <Card className="bg-white/5 backdrop-blur-lg border-white/10">
+          <Card className="bg-white/5 backdrop-blur-lg border-white/10 hover:bg-white/10 hover:border-white/20 transition-all duration-300 transform hover:scale-105 hover:-translate-y-1 group">
             <CardContent className="p-6 text-center">
-              <div className="w-12 h-12 bg-blue-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Zap className="w-6 h-6 text-blue-400" />
+              <div className="w-12 h-12 bg-blue-500/20 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-blue-500/30 transition-colors duration-300">
+                <Zap className="w-6 h-6 text-blue-400 group-hover:text-blue-300 transition-colors duration-300" />
               </div>
               <h3 className="text-lg font-semibold text-white mb-2">Lightning Fast</h3>
               <p className="text-gray-300 text-sm">Generate complete applications in seconds with live preview URLs.</p>
             </CardContent>
           </Card>
 
-          <Card className="bg-white/5 backdrop-blur-lg border-white/10">
+          <Card className="bg-white/5 backdrop-blur-lg border-white/10 hover:bg-white/10 hover:border-white/20 transition-all duration-300 transform hover:scale-105 hover:-translate-y-1 group">
             <CardContent className="p-6 text-center">
-              <div className="w-12 h-12 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Rocket className="w-6 h-6 text-green-400" />
+              <div className="w-12 h-12 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-green-500/30 transition-colors duration-300">
+                <Rocket className="w-6 h-6 text-green-400 group-hover:text-green-300 transition-colors duration-300" />
               </div>
               <h3 className="text-lg font-semibold text-white mb-2">Production Ready</h3>
               <p className="text-gray-300 text-sm">Generated code follows best practices and is ready for deployment.</p>
