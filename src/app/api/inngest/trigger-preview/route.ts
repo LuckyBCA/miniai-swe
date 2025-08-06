@@ -4,7 +4,7 @@ import { triggerPreview } from "@/actions/preview-actions";
 
 export async function POST(req: Request) {
   try {
-    const session = auth();
+    const session = await auth();
     if (!session || !session.userId) {
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }

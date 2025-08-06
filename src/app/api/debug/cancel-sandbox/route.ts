@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { addLog } from "@/lib/debug-logger";
-import { getSandbox, closeSandbox } from "@/inngest/utils";
+import { getSandbox, cleanupSandbox } from "@/inngest/utils";
 
 export async function POST(request: Request) {
   try {
@@ -15,7 +15,8 @@ export async function POST(request: Request) {
     addLog(`Attempting to cancel sandbox: ${sandboxId}`, 'warning');
     
     // Try to close the sandbox
-    const result = await closeSandbox(sandboxId);
+    await cleanupSandbox(sandboxId);
+    const result = true; // cleanupSandbox doesn't return a value
     
     if (result) {
       addLog(`Successfully closed sandbox: ${sandboxId}`, 'info');

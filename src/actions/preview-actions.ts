@@ -8,7 +8,7 @@ import { revalidatePath } from "next/cache";
 // Trigger a preview for a vibe
 export async function triggerPreview(vibeId: string, userId: string) {
   // Authorize the user
-  const session = auth();
+  const session = await auth();
   if (!session || session.userId !== userId) {
     throw new Error("Unauthorized");
   }
@@ -28,7 +28,7 @@ export async function triggerPreview(vibeId: string, userId: string) {
     }
 
     // Send event to Inngest to create the preview
-    await inngestClient.send({
+    await inngest.send({
       name: "app/preview.nextjs.app",
       data: {
         userId,
@@ -61,7 +61,7 @@ export async function triggerPreview(vibeId: string, userId: string) {
 // Cancel a preview sandbox
 export async function cancelPreview(vibeId: string, userId: string, sandboxId: string) {
   // Authorize the user
-  const session = auth();
+  const session = await auth();
   if (!session || session.userId !== userId) {
     throw new Error("Unauthorized");
   }
@@ -104,7 +104,7 @@ export async function cancelPreview(vibeId: string, userId: string, sandboxId: s
 // Get the preview status for a vibe
 export async function getPreviewStatus(vibeId: string, userId: string) {
   // Authorize the user
-  const session = auth();
+  const session = await auth();
   if (!session || session.userId !== userId) {
     throw new Error("Unauthorized");
   }

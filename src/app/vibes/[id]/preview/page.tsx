@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import prisma from "@/lib/db";
-import { auth } from "@clerk/nextjs";
+import { currentUser } from "@clerk/nextjs/server";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -65,8 +65,10 @@ function PreviewUrlDisplay({ metadata }: { metadata: any }) {
 }
 
 // Main page component
-export default async function VibeSandboxPreview({ params }: { params: { id: string } }) {
-  const { userId } = auth();
+export default async function VibeSandboxPreview({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const user = await currentUser();
+  const userId = user?.id;
   
   if (!userId) {
     return (
@@ -83,7 +85,7 @@ export default async function VibeSandboxPreview({ params }: { params: { id: str
     );
   }
   
-  const vibe = await getVibe(params.id, userId);
+  const vibe = await getVibe(id, userId);
   
   if (!vibe) {
     notFound();
