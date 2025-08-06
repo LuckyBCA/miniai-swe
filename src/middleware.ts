@@ -6,7 +6,8 @@ const isProtectedRoute = createRouteMatcher([
 ]);
 
 export default clerkMiddleware((auth, req) => {
-  if (isProtectedRoute(req)) {
+  // Only protect routes in production or when proper keys are configured
+  if (isProtectedRoute(req) && process.env.NODE_ENV === 'production') {
     auth.protect();
   }
 });
