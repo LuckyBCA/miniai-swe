@@ -6,7 +6,11 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "inngest:dev": "node inngest-dev.js",
+    "test:inngest": "node test-inngest.js",
+    "test:baseten": "node test-baseten.js",
+    "e2b:test": "node test-e2b.js"
   },
   "prisma": {
     "schema": "schema.prisma"
@@ -14,12 +18,11 @@
   "dependencies": {
     "@azure/openai": "^2.0.0",
     "@clerk/nextjs": "^6.28.1",
+    "@e2b/code-interpreter": "^1.5.1",
+    "@google/generative-ai": "^0.24.1",
     "@hookform/resolvers": "^3.9.0",
-    "@inngest/agent-kit": "^0.1.0",
-    "@inngest/next": "^3.29.0",
+    "@inngest/agent-kit": "^0.9.0",
     "@prisma/client": "^6.13.0",
-    "@google/generative-ai": "^1.0.0",
-    "@xai-org/groq-sdk": "^0.1.0",
     "@radix-ui/react-accordion": "^1.2.11",
     "@radix-ui/react-alert-dialog": "^1.1.14",
     "@radix-ui/react-aspect-ratio": "^1.1.7",
@@ -57,6 +60,7 @@
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
     "date-fns": "^4.1.0",
+    "dotenv": "^17.2.1",
     "embla-carousel-react": "^8.6.0",
     "inngest": "^3.40.1",
     "input-otp": "^1.4.2",

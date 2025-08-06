@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
   output   = "../src/generated/prisma"
@@ -15,34 +9,49 @@ datasource db {
 }
 
 model User {
-  id    String  @id
-  email String  @unique
-  name  String?
-
+  id                        String           @id
+  email                     String           @unique
+  name                      String?
   encryptedOpenRouterApiKey String?
   encryptedTogetherAiApiKey String?
-
-  vibes Vibe[]
+  vibes                     Vibe[]
+  sandboxPreviews           SandboxPreview[]
 }
 
 model Vibe {
+  id        String           @id @default(cuid())
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+  prompt    String
+  code      String?
+  status    GenerationStatus @default(PENDING)
+  provider  String?
+  model     String?
+  userId    String
+  error     String?
+  metadata  Json?
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model SandboxPreview {
   id        String   @id @default(cuid())
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  prompt String
-  code   String?
-  status GenerationStatus @default(PENDING)
-
-  provider String?
-  model    String?
-
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  appName   String
+  projectId String?
+  status    String // PENDING, RUNNING, COMPLETED, FAILED
+  url       String?
+  sandboxId String?
+  error     String?
+  
+  metadata  Json?
 }
 
 enum GenerationStatus {
   PENDING
   COMPLETED
   FAILED
+  CANCELLED
 }

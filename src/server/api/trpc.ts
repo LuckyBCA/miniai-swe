@@ -3,6 +3,7 @@ import { TRPCError, initTRPC } from "@trpc/server";
 import { type NextRequest } from "next/server";
 import superjson from "superjson";
 import { ZodError } from "zod";
+import db from "@/lib/db";
 
 interface CreateContextOptions {
   headers: Headers;
@@ -15,6 +16,7 @@ export const createTRPCContext = async (opts: CreateContextOptions) => {
 
   return {
     auth,
+    db,
     ...opts,
   };
 };
@@ -44,6 +46,7 @@ const enforceUserIsAuthed = t.middleware(({ ctx, next }) => {
   return next({
     ctx: {
       auth: ctx.auth,
+      db: ctx.db,
     },
   });
 });

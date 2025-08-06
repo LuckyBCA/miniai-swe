@@ -1,0 +1,202 @@
+# Project Plan: MiniAI Backend Setup
+
+## Notes
+- Clerk authentication is fully integrated and tested.
+- Inngest background job orchestration is set up and working.
+- tRPC API is now type-safe and connects frontend to backend jobs.
+- Servers are running and endpoints are responding as expected.
+- AI-powered code generation and persistence backend is fully implemented: Vibe model, OpenAI SDK, Inngest orchestration, and API security are complete.
+- User wants to use Inngest AgentKit (Gemini/Grok) for AI code generation with dynamic provider/model selection and abstraction.
+- User wants users to optionally provide their own API key (stored securely per user).
+- User wants custom/branded model names in UI, mapped to real models (e.g., Vibe-S → Gemini, Vibe-M → Grok, etc.)
+- Inngest AgentKit and Azure OpenAI integration setup is in progress; user wants to see successful Inngest runs for both standard and AgentKit-powered jobs before proceeding.
+- User wants to remove OpenRouter and Together AI completely and use only Inngest AgentKit, starting with Gemini (and possibly Grok) as model providers.
+- AgentKit setup should use the official @inngest/agent-kit package and follow the documentation for Gemini/Grok model helpers, agent creation, and network configuration.
+- User can provide Gemini and Grok API keys; environment variables should be used as per AgentKit docs.
+- After AgentKit is working, integrate with E2B for sandboxing and tool usage.
+- Always verify environment variables (GEMINI_API_KEY, XAI_API_KEY, ENCRYPTION_KEY, OPENAI_BASE_URL) and restart both the Next.js and Inngest servers after any config/code changes to avoid subtle runtime errors.
+- User encountering TRPCClientError: UNAUTHORIZED when invoking inngest.send mutation; likely due to authentication/context propagation issue in protectedProcedure.
+- Root cause of tRPC Unauthorized error: tRPC client did not send authentication cookies; fixed by updating httpBatchLink to include credentials.
+- tRPC authentication and Clerk context propagation are now fully functional and verified via the test page.
+- User is following the referenced video tutorial ([Build Your Own Lovable Clone...]) and provided the transcript for context.
+- AI integration and error fixes are the main priority before any frontend work.
+- After AI jobs are complete and errors are fixed, user will proceed to E2B sandbox job (account creation, CLI install, Docker template, sandbox/preview, push to GitHub branch).
+- User's laptop does not support Docker Desktop (no virtualization); needs cloud/remote Docker/E2B solution for sandboxing/preview.
+- Prisma seed script error fixed by removing seed config from package.json; user creation handled by Clerk.
+- Final database reset and user sign-in required after reset to resolve Inngest job failure (missing user after DB reset).
+- All database migration, reset, and configuration issues are now resolved; system is in final validation before E2B setup.
+- User will create a new Neon database project for a completely fresh start and update the DATABASE_URL accordingly before running migrations and proceeding to E2B setup.
+- Clerk user creation does not automatically sync to the Neon database; must implement webhook to insert new users into Prisma `User` table on Clerk sign-up.
+- Clerk webhook handler for user sync is implemented, endpoint is live, and Clerk dashboard is configured to point to it. User creation in Neon DB is now automatic and verified.
+- All database, migration, and authentication-syncing issues are now resolved and verified. Current blocker is AI provider integration (run-generation step).
+- Current AI provider error is caused by a mismatch between the provider string in model mapping ("Gemini") and what the AgentKit client expects ("gemini").
+- User is interested in using Inngest AgentKit for advanced AI orchestration, and wants to add support for Grok models via AgentKit after current backend is stable.
+- Inngest AgentKit and Azure OpenAI integration setup is in progress; user wants to see successful Inngest runs for both standard and AgentKit-powered jobs before proceeding.
+- Encountered issue: `@inngest/agent` package is not available; switched to direct Azure OpenAI agent implementation for now.
+- Updated agent implementation and test page to fix TypeScript and event structure issues; working towards successful Inngest runs for both standard and "AgentKit" jobs.
+- Next steps: confirm AI job success, then set up E2B sandbox, then extend AgentKit with tools (terminal, file system, network, routers).
+- AgentKit Gemini implementation is now functionally complete and the Inngest function is using the correct AgentKit helper (runAgent).
+- OpenRouter and Together AI logic is being removed from backend and frontend; all new code uses AgentKit for model orchestration.
+- TypeScript integration issues with AgentKit's agent/network API and result types are being debugged and fixed. The team is iterating on usage patterns to match the latest AgentKit docs and types.
+- Azure OpenAI logic removal is complete; all code now uses only Gemini via AgentKit.
+- Gemini integration is ready for testing via the test page.
+- Gemini integration has been tested via the test page; results and error handling now visible in UI.
+- Inngest router and test page are now fully aligned for Gemini-only integration.
+- Test page UI and logic cleaned up: only Gemini integration is exposed, AgentKit/Azure OpenAI sections removed, instructions updated.
+- Gemini integration is fully validated end-to-end: Inngest function, AgentKit, and test page all work together. Ready to begin E2B sandboxing integration.
+- E2B sandbox integration is now the main focus. Will install AgentKit/E2B, set up agent/network, and implement E2B tools (terminal, createOrUpdateFiles) per latest @inngest/agent-kit and @e2b/code-interpreter docs.
+- Clarification: The Next.js adapter is provided via an internal import path in the main `inngest` package (e.g., `import { serve } from "inngest/next"`), not a separate `@inngest/next` package. This is per official Inngest docs and npm README; do not attempt to install `@inngest/next`.
+- All required packages (`inngest`, `@inngest/agent-kit`, `@e2b/code-interpreter`, `@google/generative-ai`) are now installed successfully; ready to proceed with agent/network and E2B tool setup.
+- E2B agent and test page have been created in codebase; ready to test E2B-powered agent end-to-end.
+- E2B agent implementation updated to use correct Sandbox import and API (import { Sandbox } from "@e2b/code-interpreter").
+- Terminal and file tools now use E2B's runCode and files.write methods per latest SDK docs.
+- Some TypeScript errors (e.g., stdout/stderr) may require checking latest E2B SDK typings and adjusting code accordingly.
+- E2B agent now supports cloud sandbox templates (no local Docker required).
+- E2B agent cleanup is robust to missing/optional close method per SDK.
+
+## Task List
+- [x] Configure Clerk environment variables and authentication routes
+- [x] Implement Clerk middleware for route protection
+- [x] Wrap app in ClerkProvider
+- [x] Add UserButton for user management
+- [x] Set up Inngest client and functions
+- [x] Create and expose Inngest API route
+- [x] Replace example Inngest functions with generateVibe
+- [x] Create inngest tRPC router and mutation
+- [x] Wire up tRPC to frontend
+- [x] Resolve all TypeScript and module resolution issues
+- [x] Verify servers are running and jobs are triggered
+- [x] Implement AI-powered code generation and persistence (Chapter 7)
+- [x] Integrate Inngest AgentKit (Gemini/Grok) for AI code generation with dynamic provider/model selection and abstraction
+  - [x] Update OpenAI client to support custom base URL and API key
+  - [x] Add environment variables for provider selection and API keys
+  - [x] Update model selection logic to allow multiple Gemini/Grok models
+  - [x] Update Inngest function to use selected provider/model
+- [x] Refactor AI integration for multi-provider support (abstract provider interface, dynamic selection, credentials in .env)
+- [x] Remove OpenRouter and Together AI logic from backend and frontend
+- [x] Add AgentKit Gemini integration (use GEMINI_API_KEY env var)
+- [ ] (Optional) Add AgentKit Grok integration (use XAI_API_KEY env var)
+- [x] Refactor Inngest functions and test page to use AgentKit agents and networks
+- [x] Remove Azure OpenAI logic from backend and frontend
+- [x] Test Gemini integration via test page
+- [x] Update Inngest router for Gemini-only integration
+- [ ] Integrate AgentKit with E2B sandboxing and tool usage
+  - [x] Install @inngest/agent-kit, inngest, and @e2b/code-interpreter
+  - [x] Resolve @google/generative-ai dependency issue (blocking install)
+  - [x] Ensure only the main inngest package is installed for adapters (no @inngest/next)
+  - [x] Set up Coding Agent and Network (per AgentKit docs)
+  - [x] Implement E2B tools: terminal, createOrUpdateFiles
+  - [x] E2B agent supports cloud template IDs and robust cleanup
+  - [ ] Test E2B-powered agent end-to-end
+- [ ] Complete E2B sandbox setup job after AI integration and error fixes
+  - [ ] Create new Neon database project, update DATABASE_URL in .env, and run migration for a clean database state
+  - [ ] Research and set up cloud-based Docker/E2B sandbox solution (since local Docker is not supported)
+  - [ ] Fix provider string mismatch in model mapping to resolve AI integration error
+- [ ] Complete and verify Inngest AgentKit + Azure OpenAI integration
+  - [ ] Debug/fix AgentKit package issues (use direct Azure agent as fallback)
+  - [ ] Update test page and event types for correct Inngest invocation
+  - [ ] Confirm successful Inngest runs for both standard and AgentKit-powered jobs
+  - [ ] Extend AgentKit with tools: terminal, file system, network, routers
+
+## Current Goal
+Set up AgentKit + E2B sandboxing (agent, network, tools)
+
+"# Project Plan: MiniAI Backend Setup
+
+## Notes
+- Clerk authentication is fully integrated and tested.
+- Inngest background job orchestration is set up and working.
+- tRPC API is now type-safe and connects frontend to backend jobs.
+- Servers are running and endpoints are responding as expected.
+- AI-powered code generation and persistence backend is fully implemented: Vibe model, OpenAI SDK, Inngest orchestration, and API security are complete.
+- User wants to use Inngest AgentKit (Gemini/Grok) for AI code generation with dynamic provider/model selection and abstraction.
+- User wants users to optionally provide their own API key (stored securely per user).
+- User wants custom/branded model names in UI, mapped to real models (e.g., Vibe-S → Gemini, Vibe-M → Grok, etc.)
+- Inngest AgentKit and Azure OpenAI integration setup is in progress; user wants to see successful Inngest runs for both standard and AgentKit-powered jobs before proceeding.
+- User wants to remove OpenRouter and Together AI completely and use only Inngest AgentKit, starting with Gemini (and possibly Grok) as model providers.
+- AgentKit setup should use the official @inngest/agent-kit package and follow the documentation for Gemini/Grok model helpers, agent creation, and network configuration.
+- User can provide Gemini and Grok API keys; environment variables should be used as per AgentKit docs.
+- After AgentKit is working, integrate with E2B for sandboxing and tool usage.
+- Always verify environment variables (GEMINI_API_KEY, XAI_API_KEY, ENCRYPTION_KEY, OPENAI_BASE_URL) and restart both the Next.js and Inngest servers after any config/code changes to avoid subtle runtime errors.
+- User encountering TRPCClientError: UNAUTHORIZED when invoking inngest.send mutation; likely due to authentication/context propagation issue in protectedProcedure.
+- Root cause of tRPC Unauthorized error: tRPC client did not send authentication cookies; fixed by updating httpBatchLink to include credentials.
+- tRPC authentication and Clerk context propagation are now fully functional and verified via the test page.
+- User is following the referenced video tutorial ([Build Your Own Lovable Clone...]) and provided the transcript for context.
+- AI integration and error fixes are the main priority before any frontend work.
+- After AI jobs are complete and errors are fixed, user will proceed to E2B sandbox job (account creation, CLI install, Docker template, sandbox/preview, push to GitHub branch).
+- User's laptop does not support Docker Desktop (no virtualization); needs cloud/remote Docker/E2B solution for sandboxing/preview.
+- Prisma seed script error fixed by removing seed config from package.json; user creation handled by Clerk.
+- Final database reset and user sign-in required after reset to resolve Inngest job failure (missing user after DB reset).
+- All database migration, reset, and configuration issues are now resolved; system is in final validation before E2B setup.
+- User will create a new Neon database project for a completely fresh start and update the DATABASE_URL accordingly before running migrations and proceeding to E2B setup.
+- Clerk user creation does not automatically sync to the Neon database; must implement webhook to insert new users into Prisma `User` table on Clerk sign-up.
+- Clerk webhook handler for user sync is implemented, endpoint is live, and Clerk dashboard is configured to point to it. User creation in Neon DB is now automatic and verified.
+- All database, migration, and authentication-syncing issues are now resolved and verified. Current blocker is AI provider integration (run-generation step).
+- Current AI provider error is caused by a mismatch between the provider string in model mapping ("Gemini") and what the AgentKit client expects ("gemini").
+- User is interested in using Inngest AgentKit for advanced AI orchestration, and wants to add support for Grok models via AgentKit after current backend is stable.
+- Inngest AgentKit and Azure OpenAI integration setup is in progress; user wants to see successful Inngest runs for both standard and AgentKit-powered jobs before proceeding.
+- Encountered issue: `@inngest/agent` package is not available; switched to direct Azure OpenAI agent implementation for now.
+- Updated agent implementation and test page to fix TypeScript and event structure issues; working towards successful Inngest runs for both standard and "AgentKit" jobs.
+- Next steps: confirm AI job success, then set up E2B sandbox, then extend AgentKit with tools (terminal, file system, network, routers).
+- AgentKit Gemini implementation is now functionally complete and the Inngest function is using the correct AgentKit helper (runAgent).
+- OpenRouter and Together AI logic is being removed from backend and frontend; all new code uses AgentKit for model orchestration.
+- TypeScript integration issues with AgentKit's agent/network API and result types are being debugged and fixed. The team is iterating on usage patterns to match the latest AgentKit docs and types.
+- Azure OpenAI logic removal is complete; all code now uses only Gemini via AgentKit.
+- Gemini integration is ready for testing via the test page.
+- Gemini integration has been tested via the test page; results and error handling now visible in UI.
+- Inngest router and test page are now fully aligned for Gemini-only integration.
+- Test page UI and logic cleaned up: only Gemini integration is exposed, AgentKit/Azure OpenAI sections removed, instructions updated.
+- Gemini integration is fully validated end-to-end: Inngest function, AgentKit, and test page all work together. Ready to begin E2B sandboxing integration.
+- E2B sandbox integration is now the main focus. Will install AgentKit/E2B, set up agent/network, and implement E2B tools (terminal, createOrUpdateFiles) per latest @inngest/agent-kit and @e2b/code-interpreter docs.
+- Clarification: The Next.js adapter is provided via an internal import path in the main `inngest` package (e.g., `import { serve } from "inngest/next"`), not a separate `@inngest/next` package. This is per official Inngest docs and npm README; do not attempt to install `@inngest/next`.
+- All required packages (`inngest`, `@inngest/agent-kit`, `@e2b/code-interpreter`, `@google/generative-ai`) are now installed successfully; ready to proceed with agent/network and E2B tool setup.
+- E2B agent and test page have been created in codebase; ready to test E2B-powered agent end-to-end.
+- E2B agent implementation updated to use correct Sandbox import and API (import { Sandbox } from "@e2b/code-interpreter").
+- Terminal and file tools now use E2B's runCode and files.write methods per latest SDK docs.
+- Some TypeScript errors (e.g., stdout/stderr) may require checking latest E2B SDK typings and adjusting code accordingly.
+
+## Task List
+- [x] Configure Clerk environment variables and authentication routes
+- [x] Implement Clerk middleware for route protection
+- [x] Wrap app in ClerkProvider
+- [x] Add UserButton for user management
+- [x] Set up Inngest client and functions
+- [x] Create and expose Inngest API route
+- [x] Replace example Inngest functions with generateVibe
+- [x] Create inngest tRPC router and mutation
+- [x] Wire up tRPC to frontend
+- [x] Resolve all TypeScript and module resolution issues
+- [x] Verify servers are running and jobs are triggered
+- [x] Implement AI-powered code generation and persistence (Chapter 7)
+- [x] Integrate Inngest AgentKit (Gemini/Grok) for AI code generation with dynamic provider/model selection and abstraction
+  - [x] Update OpenAI client to support custom base URL and API key
+  - [x] Add environment variables for provider selection and API keys
+  - [x] Update model selection logic to allow multiple Gemini/Grok models
+  - [x] Update Inngest function to use selected provider/model
+- [x] Refactor AI integration for multi-provider support (abstract provider interface, dynamic selection, credentials in .env)
+- [x] Remove OpenRouter and Together AI logic from backend and frontend
+- [x] Add AgentKit Gemini integration (use GEMINI_API_KEY env var)
+- [ ] (Optional) Add AgentKit Grok integration (use XAI_API_KEY env var)
+- [x] Refactor Inngest functions and test page to use AgentKit agents and networks
+- [x] Remove Azure OpenAI logic from backend and frontend
+- [x] Test Gemini integration via test page
+- [x] Update Inngest router for Gemini-only integration
+- [ ] Integrate AgentKit with E2B sandboxing and tool usage
+  - [x] Install @inngest/agent-kit, inngest, and @e2b/code-interpreter
+  - [x] Resolve @google/generative-ai dependency issue (blocking install)
+  - [x] Ensure only the main inngest package is installed for adapters (no @inngest/next)
+  - [x] Set up Coding Agent and Network (per AgentKit docs)
+  - [x] Implement E2B tools: terminal, createOrUpdateFiles
+  - [ ] Test E2B-powered agent end-to-end
+- [ ] Complete E2B sandbox setup job after AI integration and error fixes
+  - [ ] Create new Neon database project, update DATABASE_URL in .env, and run migration for a clean database state
+  - [ ] Research and set up cloud-based Docker/E2B sandbox solution (since local Docker is not supported)
+  - [ ] Fix provider string mismatch in model mapping to resolve AI integration error
+- [ ] Complete and verify Inngest AgentKit + Azure OpenAI integration
+  - [ ] Debug/fix AgentKit package issues (use direct Azure agent as fallback)
+  - [ ] Update test page and event types for correct Inngest invocation
+  - [ ] Confirm successful Inngest runs for both standard and AgentKit-powered jobs
+  - [ ] Extend AgentKit with tools: terminal, file system, network, routers
+
+## Current Goal
+Set up AgentKit + E2B sandboxing (agent, network, tools)"

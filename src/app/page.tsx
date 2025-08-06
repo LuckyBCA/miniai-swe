@@ -16,7 +16,17 @@ export default function Home() {
 
   const { mutate, isPending } = trpc.inngest.send.useMutation({
     onSuccess: () => {
-      toast.success('Generation started!');
+      toast.success(
+        'Generation started!', 
+        {
+          description: 'Check the "View My Vibes" page to see results.',
+          duration: 5000,
+          action: {
+            label: 'View',
+            onClick: () => window.location.href = '/vibes'
+          }
+        }
+      );
       setPrompt('');
     },
     onError: (error) => {
@@ -34,7 +44,21 @@ export default function Home() {
   return (
     <main className="flex min-h-screen flex-col items-center p-24 bg-gray-900 text-white">
       <header className="w-full max-w-5xl flex justify-between items-center">
-        <h1 className="text-4xl font-bold">MiniAI</h1>
+        <div className="flex items-center gap-4">
+          <h1 className="text-4xl font-bold">MiniAI</h1>
+          <a 
+            href="/vibes" 
+            className="px-4 py-2 bg-blue-600 rounded-md hover:bg-blue-700 transition-colors text-sm"
+          >
+            View My Vibes
+          </a>
+          <a 
+            href="/debug" 
+            className="px-4 py-2 bg-gray-700 rounded-md hover:bg-gray-600 transition-colors text-sm"
+          >
+            Debug
+          </a>
+        </div>
         <UserButton afterSignOutUrl="/" />
       </header>
 
