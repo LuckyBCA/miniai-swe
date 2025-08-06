@@ -1,5 +1,6 @@
 import { inngestRouter } from "@/server/api/routers/inngest";
 import { vibesRouter } from "@/server/api/routers/vibes";
+import { analyticsRouter } from "@/server/api/routers/analytics";
 import { createTRPCRouter } from "./trpc";
 
 /**
@@ -10,6 +11,7 @@ import { createTRPCRouter } from "./trpc";
 export const appRouter = createTRPCRouter({
   inngest: inngestRouter,
   vibes: vibesRouter,
+  analytics: analyticsRouter,
 });
 
 // export type definition of API
