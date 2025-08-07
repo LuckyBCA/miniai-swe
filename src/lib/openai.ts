@@ -42,6 +42,14 @@ export function getOpenAIClient(provider: string, apiKey?: string): OpenAI {
   const key = apiKey || process.env[`${provider.toUpperCase()}_API_KEY`] || process.env.OPENAI_API_KEY;
   
   if (!key) {
+    // In development, provide a helpful warning but don't crash
+    if (process.env.NODE_ENV !== 'production') {
+      console.warn(`No API key provided for ${provider} and none found in environment variables. API calls will fail.`);
+      return new OpenAI({
+        apiKey: 'mock-key-for-dev',
+        baseURL: baseURL,
+      });
+    }
     throw new Error(`No API key provided for ${provider} and none found in environment variables`);
   }
 
