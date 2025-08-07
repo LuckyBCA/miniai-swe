@@ -1,7 +1,7 @@
 import { inngest } from "../client";
-import { getSandbox, getSandboxUrl } from "../utils";
-import db from "@/lib/db";
 import { addLog } from "@/lib/debug-logger";
+import db from "@/lib/db";
+import { Sandbox } from "@e2b/code-interpreter";
 
 // Define the event data interface
 interface PreviewAppEventData {
@@ -40,12 +40,14 @@ export const previewNextjsApp = inngest.createFunction(
       appName,
     };
 
+    let preview: any = null;
+
     try {
       // Log the start of the preview process
       addLog(`Starting Next.js app preview for user ${userId} with app name ${appName}`);
 
       // Record the preview attempt in the database
-      const preview = await step.run("create-preview-record", async () => {
+      preview = await step.run("create-preview-record", async () => {
         return await db.sandboxPreview.create({
           data: {
             userId,
@@ -56,39 +58,50 @@ export const previewNextjsApp = inngest.createFunction(
         });
       });
 
-      // Get a sandbox using the Next.js template
-      const sandboxId = "5iyfxo657up507oy9eay"; // Your template ID
+      // Create a new E2B sandbox for code execution
       const sandbox = await step.run("create-sandbox", async () => {
-        addLog(`Creating sandbox with template ID: ${sandboxId}`);
-        return await getSandbox(sandboxId);
-      });
+        addLog(`Creating E2B Code Interpreter sandbox`);
+        return await Sandbox.create({
+          apiKey: process.env.E2B_API_KEY,
+          timeoutMs: 300000, // 5 minutes
+        });
+      }) as Sandbox;
 
       // Set up basic Next.js app with a custom page
-      await step.run("setup-nextjs-app", async () => {
-        // Create a simple Next.js app page
-        await sandbox.filesystem.write('code/app.js', `
-// Simple Next.js app
-const { createServer } = require('http');
-const { parse } = require('url');
-const next = require('next');
+      const sandboxResult = await step.run("setup-nextjs-app", async () => {
+        // Create a simple Next.js app structure using runCode
+        const setupCode = `
+import os
+import subprocess
 
-const dev = true;
-const app = next({ dev });
-const handle = app.getRequestHandler();
+# Create the project structure
+os.makedirs('/tmp/nextjs-app/pages', exist_ok=True)
+os.makedirs('/tmp/nextjs-app/public', exist_ok=True)
 
-app.prepare().then(() => {
-  createServer((req, res) => {
-    const parsedUrl = parse(req.url, true);
-    handle(req, res, parsedUrl);
-  }).listen(3000, (err) => {
-    if (err) throw err;
-    console.log('> Ready on http://localhost:3000');
-  });
-});
-`);
+# Create package.json
+package_json = '''
+{
+  "name": "${appName.toLowerCase().replace(/[^a-z0-9-]/g, '-')}",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev -p 3000",
+    "build": "next build",
+    "start": "next start -p 3000"
+  },
+  "dependencies": {
+    "next": "latest",
+    "react": "latest",
+    "react-dom": "latest"
+  }
+}
+'''
 
-        // Create a simple page component
-        await sandbox.filesystem.write('code/pages/index.js', `
+with open('/tmp/nextjs-app/package.json', 'w') as f:
+    f.write(package_json)
+
+# Create the main page component
+index_js = '''
 import { useState } from 'react';
 
 export default function Home() {
@@ -124,28 +137,25 @@ export default function Home() {
     </div>
   );
 }
-`);
+'''
 
-        // Create a custom _app.js file for global styles
-        await sandbox.filesystem.write('code/pages/_app.js', `
+with open('/tmp/nextjs-app/pages/index.js', 'w') as f:
+    f.write(index_js)
+
+# Create _app.js
+app_js = '''
 import React from 'react';
 
 function MyApp({ Component, pageProps }) {
   return (
     <>
       <style jsx global>{\`
-        html,
-        body {
+        html, body {
           padding: 0;
           margin: 0;
-          font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto,
-            Oxygen, Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue,
-            sans-serif;
+          font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
         }
-
-        * {
-          box-sizing: border-box;
-        }
+        * { box-sizing: border-box; }
       \`}</style>
       <Component {...pageProps} />
     </>
@@ -153,65 +163,88 @@ function MyApp({ Component, pageProps }) {
 }
 
 export default MyApp;
-`);
+'''
 
-        // Install dependencies
-        const installProcess = await sandbox.process.start({
-          cmd: 'cd /home/user && npm install next react react-dom',
-          onStdout: (data) => console.log('Install stdout:', data.line),
-          onStderr: (data) => console.error('Install stderr:', data.line),
-        });
+with open('/tmp/nextjs-app/pages/_app.js', 'w') as f:
+    f.write(app_js)
 
-        const installResult = await installProcess.wait();
-        if (installResult.exitCode !== 0) {
-          throw new Error(`Failed to install dependencies: ${installResult.stderr}`);
-        }
-
-        // Create next.config.js file
-        await sandbox.filesystem.write('code/next.config.js', `
+# Create next.config.js
+config_js = '''
 module.exports = {
   reactStrictMode: true,
 };
-`);
+'''
 
-        // Create package.json
-        await sandbox.filesystem.write('code/package.json', `
-{
-  "name": "${appName.toLowerCase().replace(/[^a-z0-9]/g, '-')}",
-  "version": "0.1.0",
-  "private": true,
-  "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start"
-  },
-  "dependencies": {
-    "next": "latest",
-    "react": "latest",
-    "react-dom": "latest"
-  }
-}
-`);
+with open('/tmp/nextjs-app/next.config.js', 'w') as f:
+    f.write(config_js)
 
-        // Start the Next.js development server
-        const startProcess = await sandbox.process.start({
-          cmd: 'cd /home/user && npx next dev',
-          onStdout: (data) => console.log('Next.js stdout:', data.line),
-          onStderr: (data) => console.error('Next.js stderr:', data.line),
-        });
+print("Next.js app structure created successfully!")
+print("Files created:")
+print("- /tmp/nextjs-app/package.json")
+print("- /tmp/nextjs-app/pages/index.js") 
+print("- /tmp/nextjs-app/pages/_app.js")
+print("- /tmp/nextjs-app/next.config.js")
+`;
 
-        // Wait a bit to make sure the server starts
-        await new Promise(resolve => setTimeout(resolve, 5000));
+        // Execute the setup code
+        const setupResult = await sandbox.runCode(setupCode);
+        console.log('Setup result:', setupResult);
+        
+        // Install dependencies and start the Next.js server
+        const installAndStartCode = `
+import subprocess
+import os
+import time
+import threading
+
+os.chdir('/tmp/nextjs-app')
+
+# Install dependencies
+print("Installing dependencies...")
+install_result = subprocess.run(['npm', 'install'], capture_output=True, text=True)
+print("Install stdout:", install_result.stdout)
+if install_result.stderr:
+    print("Install stderr:", install_result.stderr)
+
+if install_result.returncode != 0:
+    raise Exception(f"Failed to install dependencies: {install_result.stderr}")
+
+print("Dependencies installed successfully!")
+
+# Start the development server in the background
+def start_server():
+    print("Starting Next.js development server...")
+    process = subprocess.Popen(['npm', 'run', 'dev'], 
+                             stdout=subprocess.PIPE, 
+                             stderr=subprocess.PIPE, 
+                             text=True)
+    
+    # Log output
+    for line in process.stdout:
+        print(f"Server: {line.strip()}")
+        if "Ready" in line or "Local:" in line:
+            break
+
+# Start server in background thread
+server_thread = threading.Thread(target=start_server)
+server_thread.daemon = True
+server_thread.start()
+
+# Wait a bit for server to start
+time.sleep(10)
+print("Next.js server should be running on http://localhost:3000")
+`;
+
+        // Execute the install and start code
+        const startResult = await sandbox.runCode(installAndStartCode);
+        console.log('Start result:', startResult);
 
         // Get the sandbox URL
-        const sandboxUrl = getSandboxUrl(sandboxId);
-        if (!sandboxUrl) {
-          throw new Error('Failed to get sandbox URL');
-        }
-
+        const sandboxUrl = `https://${(sandbox as any).id}.e2b.dev`;
+        
         // Return the sandbox information
         return {
-          sandboxId,
+          sandboxId: (sandbox as any).id,
           sandboxUrl,
           previewUrl: `${sandboxUrl}:3000`,
         };
@@ -221,10 +254,12 @@ module.exports = {
       await step.run("update-preview-record", async () => {
         const updateData = {
           status: "COMPLETED",
+          sandboxId: sandboxResult.sandboxId,
+          url: sandboxResult.previewUrl,
           metadata: {
-            sandboxId: sandbox.sandboxId,
-            sandboxUrl: sandbox.sandboxUrl,
-            previewUrl: sandbox.previewUrl,
+            sandboxId: sandboxResult.sandboxId,
+            sandboxUrl: sandboxResult.sandboxUrl,
+            previewUrl: sandboxResult.previewUrl,
             completedAt: new Date().toISOString(),
           },
         };
@@ -239,9 +274,9 @@ module.exports = {
       result = {
         success: true,
         appName,
-        sandboxId: sandbox.sandboxId,
-        sandboxUrl: sandbox.sandboxUrl,
-        previewUrl: sandbox.previewUrl,
+        sandboxId: sandboxResult.sandboxId,
+        sandboxUrl: sandboxResult.sandboxUrl,
+        previewUrl: sandboxResult.previewUrl,
       };
 
     } catch (error) {

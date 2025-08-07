@@ -1,7 +1,7 @@
-import { createTRPCRouter, protectedProcedure } from "@/server/api/trpc";
+import { createTRPCRouter, appGenerationProcedure } from "@/server/api/trpc";
 import { inngest } from "@/inngest/client";
 import { z } from "zod";
-import { BrandedModel } from "@/lib/ai-models";
+import { checkAndConsumeCredits, CreditAction } from "@/lib/credit-system";
 
 // Supported Gemini models for internal use
 export const GEMINI_MODELS = [
@@ -16,7 +16,7 @@ export const BRANDED_MODELS = ["Vibe-S", "Vibe-M", "Vibe-L"] as const;
 type GeminiModel = (typeof GEMINI_MODELS)[number];
 
 export const inngestRouter = createTRPCRouter({
-  send: protectedProcedure
+  send: appGenerationProcedure
     .input(
       z.object({
         prompt: z.string()
@@ -35,6 +35,13 @@ export const inngestRouter = createTRPCRouter({
       })
     )
     .mutation(async ({ ctx, input }) => {
+      // Consume credits now that we're actually processing the request
+      const creditResult = await checkAndConsumeCredits(ctx.auth.userId!, CreditAction.APP_GENERATION);
+      
+      if (!creditResult.success) {
+        throw new Error(creditResult.message || "Insufficient credits");
+      }
+
       // Map branded model to Gemini model
       let geminiModel: GeminiModel = "gemini-1.5-flash"; // default
       
@@ -57,6 +64,7 @@ export const inngestRouter = createTRPCRouter({
         jobId,
         message: "Generation job started",
         timestamp: new Date().toISOString(),
+        creditsRemaining: creditResult.remaining
       };
     }),
 });

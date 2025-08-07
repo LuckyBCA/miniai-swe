@@ -45,7 +45,7 @@ export async function cancelSandbox(sandboxId: string): Promise<void> {
     }
 
     // Connect to the existing sandbox and kill it
-    const sandbox = await Sandbox.reconnect(sandboxId, {
+    const sandbox = await Sandbox.connect(sandboxId, {
       apiKey: process.env.E2B_API_KEY,
     });
 
@@ -66,14 +66,11 @@ export async function executeSandboxCode(
   language: string = "bash"
 ): Promise<{ output?: string; error?: string }> {
   try {
-    const sandbox = await Sandbox.reconnect(sandboxId, {
+    const sandbox = await Sandbox.connect(sandboxId, {
       apiKey: process.env.E2B_API_KEY,
     });
 
-    const result = await sandbox.notebook.execCell(code, {
-      onStdout: (output) => console.log("Sandbox stdout:", output),
-      onStderr: (output) => console.error("Sandbox stderr:", output),
-    });
+    const result = await sandbox.runCode(code);
 
     return {
       output: result.text || "",
@@ -95,7 +92,7 @@ export async function getSandboxStatus(sandboxId: string): Promise<{
   error?: string;
 }> {
   try {
-    const sandbox = await Sandbox.reconnect(sandboxId, {
+    const sandbox = await Sandbox.connect(sandboxId, {
       apiKey: process.env.E2B_API_KEY,
     });
 

@@ -4,6 +4,7 @@ import { type NextRequest } from "next/server";
 import superjson from "superjson";
 import { ZodError } from "zod";
 import db from "@/lib/db";
+import { checkAndConsumeCredits, CreditAction } from "@/lib/credit-system";
 
 interface CreateContextOptions {
   headers: Headers;
@@ -51,4 +52,34 @@ const enforceUserIsAuthed = t.middleware(({ ctx, next }) => {
   });
 });
 
+// Middleware factory for credit-protected procedures
+const enforceCreditsAvailable = (action: CreditAction) => t.middleware(async ({ ctx, next }) => {
+  if (!ctx.auth.userId) {
+    throw new TRPCError({ code: "UNAUTHORIZED" });
+  }
+
+  // Check if user has enough credits (without consuming them yet)
+  const creditCheck = await checkAndConsumeCredits(ctx.auth.userId, action, false);
+  
+  if (!creditCheck.success) {
+    throw new TRPCError({ 
+      code: "FORBIDDEN", 
+      message: creditCheck.message || "Insufficient credits"
+    });
+  }
+
+  return next({
+    ctx: {
+      auth: ctx.auth,
+      db: ctx.db,
+      creditAction: action, // Pass the action to the procedure
+    },
+  });
+});
+
 export const protectedProcedure = t.procedure.use(enforceUserIsAuthed);
+
+// Credit-protected procedures for different actions
+export const appGenerationProcedure = t.procedure.use(enforceUserIsAuthed).use(enforceCreditsAvailable(CreditAction.APP_GENERATION));
+export const sandboxProcedure = t.procedure.use(enforceUserIsAuthed).use(enforceCreditsAvailable(CreditAction.SANDBOX_PREVIEW));
+export const codeExecutionProcedure = t.procedure.use(enforceUserIsAuthed).use(enforceCreditsAvailable(CreditAction.CODE_EXECUTION));
